@@ -11,3 +11,4 @@ dependencies:
       - opencv-python-headless
       - tqdm==4.65.*
       - pyyaml==6.0
+      - flask==2.2.*
