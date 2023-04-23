@@ -58,14 +58,23 @@ ioctl: VIDIOC_ENUM_FMT
    ...
 ```
 
-### Local runnining
+## Edge setup (Debian based)
+
+For debian based servers with a connected Edge TPU, copy and run the script `edge-setup.sh`
+
+```bash
+chmod +x edge-setup.sh
+./edge-setup.sh
+```
+
+## Run
 
 ```bash
 conda activate yolo-edgetpu
-python app.py
+python3 app.py --device 3
 ```
 
 ```bash
 conda activate yolo-edgetpu
-python detect.py -m yolov5s-int8-224_edgetpu.tflite --stream
+python3 detect.py -m yolov5s-int8-224_edgetpu.tflite --stream --device 3
 ```
