@@ -157,4 +157,4 @@ if __name__ == "__main__":
     model_name = f"yolov5s-int8-{args.input}_edgetpu.tflite"
     coco_classes = args.names
 
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", debug=False)
