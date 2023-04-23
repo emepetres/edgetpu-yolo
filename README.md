@@ -2,13 +2,11 @@
 
 Python API to run inference on image data coming from the camera.
 
+Based on the work of [Josh Veitch-Michaelis](https://github.com/jveitchmichaelis/edgetpu-yolo/blob/main/edgetpumodel.py)
+
 ## Dev setup
 
 ### Requirements
-
-#### Wayland
-
-Wayland must be enabled on the OS system
 
 #### Edge TPU runtime
 
@@ -16,14 +14,6 @@ The Edge TPU runtime is needed for running the demo locally.
 
 On debian-based distros, go to <https://coral.ai/software/#debian-packages>.
 On arch based distros, install it from AUR `yay -S libedgetpu-std`
-
-#### Base python packages
-
-This is necessary to be able to load GStreamer custom python plugins with Wayland backend
-
-```bash
-pip install PyOpenGL PyOpenGL_accelerate numpy
-```
 
 #### Python environment
 
