@@ -1,21 +1,16 @@
 import argparse
 import logging
-from flask import Flask, render_template, Response
 import cv2
 import numpy as np
-
 from edgetpumodel import EdgeTPUModel
-from utils import (
-    resize_and_pad,
-    get_image_tensor,
-    save_one_json,
-    coco80_to_coco91_class,
-)
+from helpers import annotate_image
+from utils import get_image_tensor
+from flask import Flask, abort, render_template, Response
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("APP")
 
-app = Flask(__name__)
+app = Flask("APP")
 
 
 device = 0
@@ -36,33 +31,30 @@ def gen_frames():  # generate frame by frame from camera
     error = ""
 
     while True:
-        try:
-            res, image = camera.read()
+        res, image = camera.read()
 
-            if res is False:
-                error = "Empty image received"
-                break
-            else:
-                full_image, net_image, pad = get_image_tensor(image, input_size[0])
-                pred = model.forward(net_image)
-
-                annotated_image = model.annotate_image(pred[0], full_image, pad)
-
-                # # tinference, tnms = model.get_last_inference_time()
-                # # logger.info("Frame done in {}".format(tinference + tnms))
-
-                _, annotated_frame = cv2.imencode(".jpg", annotated_image)
-                frame = annotated_frame.tobytes()
-                yield (
-                    b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-                )  # concat frame one by one and show result
-        except KeyboardInterrupt:
+        if res is False:
+            error = "Empty image received"
             break
+        else:
+            full_image, net_image, pad = get_image_tensor(image, input_size[0])
+            pred = model.forward(net_image)
+
+            annotated_image = annotate_image(model, pred[0], full_image, pad)
+
+            # # tinference, tnms = model.get_last_inference_time()
+            # # logger.info("Frame done in {}".format(tinference + tnms))
+
+            _, annotated_frame = cv2.imencode(".jpg", annotated_image)
+            frame = annotated_frame.tobytes()
+            yield (
+                b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+            )  # concat frame one by one and show result
 
     camera.release()
     if error:
         logger.error(error)
-        exit(1)
+        abort(500, error)
     exit(0)
 
 
