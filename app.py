@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import cv2
 import numpy as np
@@ -12,7 +13,8 @@ logger = logging.getLogger("APP")
 
 device = 0
 model_name = ""
-data_window = 0
+data_window = {}
+WINDOW_SIZE = 6000  # 20 FPS x 60 x 5, approx five minutes
 
 app = Flask("APP")
 
@@ -41,14 +43,20 @@ def detect():  # generate frame by frame from camera
             full_image, net_image, pad = get_image_tensor(image, input_size[0])
             pred = model.forward(net_image)
 
-            annotated_image = annotate_image(model, pred[0], full_image, pad)
+            annotated_image, data = annotate_image(model, pred[0], full_image, pad)
+            for label, num in data.items():
+                if label in data_window:
+                    data_window[label] = np.append(data_window[label], num)
+                    if len(data_window[label]) > WINDOW_SIZE:
+                        data_window[label] = np.delete(data_window[label], 0)
+                else:
+                    data_window[label] = np.array([num])
 
             # # tinference, tnms = model.get_last_inference_time()
             # # logger.info("Frame done in {}".format(tinference + tnms))
 
             _, annotated_frame = cv2.imencode(".jpg", annotated_image)
             frame = annotated_frame.tobytes()
-            data_window += 1  # TODO
             yield (
                 b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
             )  # concat frame one by one and show result
@@ -62,7 +70,8 @@ def detect():  # generate frame by frame from camera
 
 def compute_statistics():
     global model_name, device, data_window
-    return str(data_window)
+    stats = {label: window.mean() for label, window in data_window.items()}
+    return str(json.dumps(stats, indent=1))
 
 
 @app.route("/video_feed")
@@ -93,9 +102,6 @@ if __name__ == "__main__":
         choices=["224", "192", "96"],
         default="224",
         help="input size to choose weights file",
-    )
-    parser.add_argument(
-        "--bench_speed", action="store_true", help="run speed test on dummy data"
     )
     parser.add_argument(
         "--conf_thresh", type=float, default=0.25, help="model confidence threshold"
