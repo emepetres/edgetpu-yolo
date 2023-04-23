@@ -10,14 +10,15 @@ from flask import Flask, abort, render_template, Response
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("APP")
 
+device = 0
+model_name = ""
+data_window = 0
+
 app = Flask("APP")
 
 
-device = 0
-model_name = ""
-
-
-def gen_frames():  # generate frame by frame from camera
+def detect():  # generate frame by frame from camera
+    global model_name, device, data_window
     model = EdgeTPUModel(
         model_name, args.names, conf_thresh=args.conf_thresh, iou_thresh=args.iou_thresh
     )
@@ -47,6 +48,7 @@ def gen_frames():  # generate frame by frame from camera
 
             _, annotated_frame = cv2.imencode(".jpg", annotated_image)
             frame = annotated_frame.tobytes()
+            data_window += 1  # TODO
             yield (
                 b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
             )  # concat frame one by one and show result
@@ -58,10 +60,21 @@ def gen_frames():  # generate frame by frame from camera
     exit(0)
 
 
+def compute_statistics():
+    global model_name, device, data_window
+    return str(data_window)
+
+
 @app.route("/video_feed")
 def video_feed():
     # Video streaming route. Put this in the src attribute of an img tag
-    return Response(gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(detect(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+@app.route("/statistics")
+def statistics():
+    # Video streaming route. Put this in the src attribute of an img tag
+    return Response(compute_statistics(), mimetype="text/plain")
 
 
 @app.route("/")
