@@ -18,42 +18,57 @@
 
     <title>EdgeTPU Detection</title>
 
-    <script type="text/javascript">
-      function do_ajax() {
-        var req = new XMLHttpRequest();
-        var result = document.getElementById("temperatureLabel");
-        req.onreadystatechange = function () {
-          if (this.readyState == 4 && this.status == 200) {
-            result.innerHTML = this.responseText;
-          } else {
-            result.innerHTML = "loading...";
-          }
-        };
-
-        req.open("GET", "/statistics", true);
-        req.setRequestHeader(
-          "content-type",
-          "application/x-www-form-urlencoded;charset=UTF-8"
-        );
-        req.send(null);
-      }
-      function readData() {
-        setInterval(do_ajax, 500);
-      }
-    </script>
+    <script src="{{ url_for('static', filename='js/chart.bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/update.js') }}"></script>
   </head>
-  <body onload="readData();">
+
+  <body>
     <div class="container">
       <div class="row">
         <div class="col-lg-8 offset-lg-2">
           <h3 class="mt-5">Live Streaming</h3>
           <img src="{{ url_for('video_feed') }}" width="100%" />
         </div>
-        <div class="col-lg-2">
-          <h3 class="mt-5">Data</h3>
-          <span id="temperatureLabel"></span>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+          <div style="width: 100%">
+            <canvas id="canvas"></canvas>
+          </div>
         </div>
       </div>
     </div>
+
+    <script>
+      function do_ajax(chart) {
+        var req = new XMLHttpRequest();
+        var result = document.getElementById("dataLabel");
+        req.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            data = JSON.parse(this.responseText);
+            update_chart(chart, data);
+          } else {
+            // result.innerHTML = "loading..."; TODO:
+          }
+        };
+
+        req.open("GET", "/statistics", true);
+        req.setRequestHeader("content-type", "application/json;charset=UTF-8");
+        req.send(null);
+      }
+
+      function readData(chart) {
+        setInterval(function () {
+          do_ajax(chart);
+        }, 5000);
+      }
+
+      window.onload = function () {
+        var ctx = document.getElementById("canvas").getContext("2d");
+        window.myLine = new Chart(ctx, chart_config);
+        readData(window.myLine);
+      };
+    </script>
   </body>
 </html>
