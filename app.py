@@ -13,6 +13,7 @@ logger = logging.getLogger("APP")
 
 device = 0
 model_name = ""
+coco_classes = []
 data_window = {}
 WINDOW_SIZE = 6000  # 20 FPS x 60 x 5, approx five minutes
 
@@ -20,9 +21,12 @@ app = Flask("APP")
 
 
 def detect():  # generate frame by frame from camera
-    global model_name, device, data_window
+    global data_window
     model = EdgeTPUModel(
-        model_name, args.names, conf_thresh=args.conf_thresh, iou_thresh=args.iou_thresh
+        model_name,
+        coco_classes,
+        conf_thresh=args.conf_thresh,
+        iou_thresh=args.iou_thresh,
     )
     input_size = model.get_image_size()
     x = (255 * np.random.random((3, *input_size))).astype(np.uint8)
@@ -70,7 +74,10 @@ def detect():  # generate frame by frame from camera
 
 def compute_statistics():
     global model_name, device, data_window
-    stats = {label: window.mean() for label, window in data_window.items()}
+    stats = {
+        label: round(window.sum() / WINDOW_SIZE, 2)
+        for label, window in data_window.items()
+    }
     return str(json.dumps(stats, indent=1))
 
 
@@ -130,5 +137,6 @@ if __name__ == "__main__":
 
     device = args.device
     model_name = f"yolov5s-int8-{args.input}_edgetpu.tflite"
+    coco_classes = args.names
 
     app.run(host="0.0.0.0", debug=True)
