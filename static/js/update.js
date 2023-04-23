@@ -1,14 +1,4 @@
-var DATA_ITEMS = 60; // 5' x 60'' / 5''
-
-function getLabelIndex(datasets, label) {
-  for (let i = 0; i < datasets.length; i++) {
-    if (label == datasets[i].label) {
-      return i;
-    }
-  }
-
-  return -1;
-}
+var DATA_ITEMS = 30; // 2.5' x 60'' / 5''
 
 var next_color_idx = 0;
 var colors = Object.values(window.chartColors);
@@ -23,54 +13,72 @@ function getSecondsInCurrentMinute() {
   return now.getSeconds();
 }
 
-function createList() {
-  const list = new Array(60).fill(-1);
-  return list;
-}
-
 function update_chart(chart, data) {
-  const myList = createList();
-  current_labels = [];
+  data_labels = Object.keys(data);
+  current_labels = {};
+  old_labels = {};
   for (let i = 0; i < chart.config.data.datasets.length; i++) {
-    dataset = chart.config.data.datasets[i];
-    if (dataset.data.length <= 1) {
-      chart.config.data.datasets.splice(i, 1); // remove item
+    let dataset = chart.config.data.datasets[i];
+    if (data_labels.includes(dataset.label)) {
+      current_labels[dataset.label] = [i, dataset];
     } else {
-      current_labels.push(dataset.label);
-      dataset.data.shift();
+      old_labels[dataset.label] = [i, dataset];
     }
   }
 
-  data_labels = Object.keys(data);
-  new_labels = data_labels.filter((label) => !current_labels.includes(label));
+  // update current registries
+  for (let label in current_labels) {
+    let dataset = current_labels[label][1];
+    dataset.data.shift();
+    dataset.data.push(data[label]);
+  }
 
-  // update label list
+  // update old registries
+  let old_classes_to_delete = [];
+  for (let label in old_labels) {
+    let dataset = old_labels[label][1];
+    dataset.data.shift();
+    dataset.data.push(NaN);
+    if (dataset.data.every(isNaN)) {
+      let idx = old_labels[label][0];
+      old_classes_to_delete.push(idx);
+    }
+  }
+
+  // add new label on x axes
   chart.config.data.labels.shift();
   chart.config.data.labels.push(getSecondsInCurrentMinute());
 
-  // update current labels
-  for (let i = 0; i < current_labels.length; i++) {
-    label = current_labels[i];
-    idx = getLabelIndex(chart.config.data.datasets, label);
-    chart.config.data.datasets[idx].data.push(data[label]);
+  // delete too old registries
+  old_classes_to_delete.sort(function (a, b) {
+    return a - b;
+  });
+  for (let i = 0; i < old_classes_to_delete.length; i++) {
+    let idx = old_classes_to_delete[i] - i;
+    chart.config.data.datasets.splice(idx, 1); // remove class
   }
 
-  // create new labels
+  // create new classes
+  let current_labels_list = Object.keys(current_labels);
+  let new_labels = data_labels.filter(
+    (label) => !current_labels_list.includes(label)
+  );
   for (let i = 0; i < new_labels.length; i++) {
-    label = new_labels[i];
-    color = getColor();
+    let label = new_labels[i];
+    let color = getColor();
     let new_class = {
       label: label,
       fill: false,
       backgroundColor: color,
       borderColor: color,
       pointRadius: 0,
-      data: new Array(58).fill(NaN),
+      data: new Array(DATA_ITEMS - 2).fill(NaN),
     };
     new_class.data.push(0);
     new_class.data.push(data[label]);
     chart.config.data.datasets.push(new_class);
   }
+
   chart.update();
 }
 
