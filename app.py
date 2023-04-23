@@ -14,13 +14,39 @@ device = 0
 model_name = ""
 coco_classes = []
 data_window = {}
-WINDOW_SIZE = 6000  # 20 FPS x 60 x 5, approx five minutes
+WINDOW_SIZE = 600  # 20 FPS x 30, approx thirty seconds
 
 app = Flask("APP")
 
 
-def detect():  # generate frame by frame from camera
+def register_annotations(data):
     global data_window
+
+    # first, remove first item from window
+    for label, window in data_window.items():
+        data_window[label] = np.delete(window, 0)
+
+    # update values of already registered classes
+    common_labels = [label for label in data.keys() if label in data_window]
+    for label in common_labels:
+        data_window[label] = np.append(data_window[label], data[label])
+
+    # create window for new classes
+    new_labels = [label for label in data.keys() if label not in data_window]
+    for label in new_labels:
+        data_window[label] = np.zeros(WINDOW_SIZE)
+        data_window[label][WINDOW_SIZE - 1] = data[label]
+
+    # update already registered classes not being registered at the moment
+    old_labels = [label for label in data_window.keys() if label not in data]
+    for label in old_labels:
+        if np.all(data_window[label] == 0):
+            del data_window[label]
+        else:
+            data_window[label] = np.append(data_window[label], 0)
+
+
+def detect():  # generate frame by frame from camera
     model = EdgeTPUModel(
         model_name,
         coco_classes,
@@ -47,13 +73,7 @@ def detect():  # generate frame by frame from camera
             pred = model.forward(net_image)
 
             annotated_image, data = annotate_image(model, pred[0], full_image, pad)
-            for label, num in data.items():
-                if label in data_window:
-                    data_window[label] = np.append(data_window[label], num)
-                    if len(data_window[label]) > WINDOW_SIZE:
-                        data_window[label] = np.delete(data_window[label], 0)
-                else:
-                    data_window[label] = np.array([num])
+            register_annotations(data)
 
             # # tinference, tnms = model.get_last_inference_time()
             # # logger.info("Frame done in {}".format(tinference + tnms))
@@ -67,7 +87,7 @@ def detect():  # generate frame by frame from camera
     camera.release()
     if error:
         logger.error(error)
-        abort(5000, error)
+        abort(500, error)
     exit(0)
 
 
@@ -76,6 +96,7 @@ def compute_statistics():
     stats = {
         label: round(window.sum() / WINDOW_SIZE, 2)
         for label, window in data_window.items()
+        if round(window.sum() / WINDOW_SIZE, 2) > 0
     }
     return stats
 
@@ -88,7 +109,6 @@ def video_feed():
 
 @app.route("/statistics")
 def statistics():
-    # Video streaming route. Put this in the src attribute of an img tag
     return jsonify(compute_statistics())
 
 
@@ -100,7 +120,6 @@ def index():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("EdgeTPU test runner")
-    # # parser.add_argument("--model", "-m", help="weights file", required=True)
     parser.add_argument(
         "--input",
         "-i",

@@ -64,8 +64,10 @@ function update_chart(chart, data) {
       fill: false,
       backgroundColor: color,
       borderColor: color,
-      data: new Array(59).fill(0),
+      pointRadius: 0,
+      data: new Array(58).fill(NaN),
     };
+    new_class.data.push(0);
     new_class.data.push(data[label]);
     chart.config.data.datasets.push(new_class);
   }
@@ -109,6 +111,9 @@ var chart_config = {
           scaleLabel: {
             display: true,
             labelString: "#",
+          },
+          ticks: {
+            beginAtZero: true,
           },
         },
       ],
