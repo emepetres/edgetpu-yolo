@@ -18,5 +18,5 @@ python3 -m pip install opencv-python-headless --user
 python3 -m pip install tqdm pyyaml --user
 
 # Clone this repository
-git clone git@github.com:emepetres/edgetpu-yolo.git
+git clone https://github.com/emepetres/edgetpu-yolo.git
 cd edgetpu-yolo
