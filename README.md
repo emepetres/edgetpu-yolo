@@ -58,9 +58,23 @@ ioctl: VIDIOC_ENUM_FMT
    ...
 ```
 
-### Local runnining
+## Edge setup (Debian based)
+
+For debian based servers with a connected Edge TPU, copy and run the script `edge-setup.sh`
 
 ```bash
-conda activate coraldev
-GST_PLUGIN_PATH=$PWD/plugins python -m edgetpuvision.detect_server --model demo_files/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --labels demo_files/coco_labels.txt --source /dev/video0:YUY2:640x480:24/1
+chmod +x edge-setup.sh
+./edge-setup.sh
+```
+
+## Run
+
+```bash
+conda activate yolo-edgetpu
+python3 app.py --device 3
+```
+
+```bash
+conda activate yolo-edgetpu
+python3 detect.py -m yolov5s-int8-224_edgetpu.tflite --stream --device 3
 ```
