@@ -67,7 +67,7 @@ def detect():  # generate frame by frame from camera
     camera.release()
     if error:
         logger.error(error)
-        abort(500, error)
+        abort(5000, error)
     exit(0)
 
 
