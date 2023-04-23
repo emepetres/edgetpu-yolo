@@ -1,0 +1,14 @@
+name: yolo-edgetpu
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - numpy>=1.12.1
+      - --extra-index-url https://google-coral.github.io/py-repo/
+      - pycoral==2.0.*
+      - opencv-python-headless
+      - tqdm==4.65.*
+      - pyyaml==6.0
+      - flask==2.2.*
