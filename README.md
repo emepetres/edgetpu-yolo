@@ -61,6 +61,11 @@ ioctl: VIDIOC_ENUM_FMT
 ### Local runnining
 
 ```bash
-conda activate coraldev
-GST_PLUGIN_PATH=$PWD/plugins python -m edgetpuvision.detect_server --model demo_files/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --labels demo_files/coco_labels.txt --source /dev/video0:YUY2:640x480:24/1
+conda activate yolo-edgetpu
+python app.py
+```
+
+```bash
+conda activate yolo-edgetpu
+python detect.py -m yolov5s-int8-224_edgetpu.tflite --stream
 ```
