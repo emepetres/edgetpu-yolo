@@ -26,13 +26,33 @@
   <body>
     <div class="container">
       <div class="row">
+        <div class="col-lg-2 d-flex align-items-center">
+          <img
+            src="{{ url_for('static', filename='img/plain-concepts-logo@2x.png') }}"
+            width="100%"
+          />
+        </div>
+        <div class="col-lg-10">
+          <h1>Google Coral Edge TPU Smart IoT sensor Demo</h1>
+          <p>
+            Running
+            <a href="https://github.com/ultralytics/yolov5" target="_blank"
+              >YoloV5</a
+            >
+            detection architecture trained over the
+            <a href="https://cocodataset.org/" target="_blank">COCO dataset</a>,
+            detecting 80 different objects.
+          </p>
+        </div>
+      </div>
+      <div class="row">
         <div class="col-lg-8 offset-lg-2">
           <h3 class="mt-5">Live Streaming</h3>
           <img src="{{ url_for('video_feed') }}" width="100%" />
         </div>
       </div>
       <div class="row">
-        <div class="col-lg-8 offset-lg-2">
+        <div class="col-lg-10 offset-lg-1">
           <div style="width: 100%">
             <canvas id="canvas"></canvas>
           </div>
@@ -48,8 +68,6 @@
           if (this.readyState == 4 && this.status == 200) {
             data = JSON.parse(this.responseText);
             update_chart(chart, data);
-          } else {
-            // result.innerHTML = "loading..."; TODO:
           }
         };
 
