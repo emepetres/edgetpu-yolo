@@ -20,7 +20,7 @@ def annotate_image(
     Outputs image with annotations
     """
     if not len(det):
-        return input_image
+        return input_image, {}
 
     # Rescale boxes from img_size to im0 size
     # x1, y1, x2, y2=
@@ -40,16 +40,20 @@ def annotate_image(
         logger.info("Detected: {}".format(s))
 
     # Write results
+    data = {}
     output_image = input_image
     for *xyxy, conf, cls in reversed(det):
         c = int(cls)  # integer class
+        _label = model.names[c]
         label = (
-            None
-            if hide_labels
-            else (model.names[c] if hide_conf else f"{model.names[c]} {conf:.2f}")
+            None if hide_labels else (_label if hide_conf else f"{_label} {conf:.2f}")
         )
         output_image = plot_one_box(
             xyxy, output_image, label=label, color=model.colors(c, True)
         )
+        if _label in data:
+            data[_label] += 1
+        else:
+            data[_label] = 1
 
-    return output_image
+    return output_image, data
