@@ -1,12 +1,11 @@
 import argparse
-import json
 import logging
 import cv2
 import numpy as np
 from edgetpumodel import EdgeTPUModel
 from helpers import annotate_image
 from utils import get_image_tensor
-from flask import Flask, abort, render_template, Response
+from flask import Flask, abort, jsonify, render_template, Response
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("APP")
@@ -78,7 +77,7 @@ def compute_statistics():
         label: round(window.sum() / WINDOW_SIZE, 2)
         for label, window in data_window.items()
     }
-    return str(json.dumps(stats, indent=1))
+    return stats
 
 
 @app.route("/video_feed")
@@ -90,7 +89,7 @@ def video_feed():
 @app.route("/statistics")
 def statistics():
     # Video streaming route. Put this in the src attribute of an img tag
-    return Response(compute_statistics(), mimetype="text/plain")
+    return jsonify(compute_statistics())
 
 
 @app.route("/")

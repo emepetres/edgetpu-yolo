@@ -18,57 +18,36 @@
 
     <title>EdgeTPU Detection</title>
 
-    <script src="https://www.chartjs.com.cn/dist/Chart.bundle.js"></script>
-    <script src="https://www.chartjs.com.cn/samples/utils.js"></script>
+    <script src="{{ url_for('static', filename='js/chart.bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 
     <script type="text/javascript">
-      function do_ajax() {
+      function do_ajax(chart) {
         var req = new XMLHttpRequest();
         var result = document.getElementById("dataLabel");
         req.onreadystatechange = function () {
           if (this.readyState == 4 && this.status == 200) {
-            result.innerHTML = this.responseText;
+            result.innerHTML = JSON.parse(this.responseText);
+            data = getMockData();
+            chart.config.data = data;
+            chart.update();
           } else {
             result.innerHTML = "loading...";
           }
         };
 
         req.open("GET", "/statistics", true);
-        req.setRequestHeader(
-          "content-type",
-          "application/x-www-form-urlencoded;charset=UTF-8"
-        );
+        req.setRequestHeader("content-type", "application/json;charset=UTF-8");
         req.send(null);
       }
-      function readData() {
-        setInterval(do_ajax, 500);
+      function readData(chart) {
+        setInterval(function () {
+          do_ajax(chart);
+        }, 500);
       }
-    </script>
-  </head>
 
-  <body>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-          <h3 class="mt-5">Live Streaming</h3>
-          <img src="{{ url_for('video_feed') }}" width="100%" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-          <h3 class="mt-5">Data</h3>
-          <span id="dataLabel"></span>
-          <div style="width: 100%">
-            <canvas id="canvas"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      var config = {
-        type: "line",
-        data: {
+      function getMockData() {
+        return {
           labels: [
             "January",
             "February",
@@ -126,7 +105,34 @@
               fill: true,
             },
           ],
-        },
+        };
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+          <h3 class="mt-5">Live Streaming</h3>
+          <img src="{{ url_for('video_feed') }}" width="100%" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+          <h3 class="mt-5">Data</h3>
+          <span id="dataLabel"></span>
+          <div style="width: 100%">
+            <canvas id="canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var config = {
+        type: "line",
+        data: {},
         options: {
           responsive: true,
           title: {
@@ -165,9 +171,9 @@
       };
 
       window.onload = function () {
-        readData();
         var ctx = document.getElementById("canvas").getContext("2d");
         window.myLine = new Chart(ctx, config);
+        readData(window.myLine);
       };
     </script>
   </body>
