@@ -12,3 +12,4 @@ dependencies:
       - tqdm==4.65.*
       - pyyaml==6.0
       - flask==2.2.*
+      - mendel-development-tool
