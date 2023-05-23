@@ -1,5 +1,6 @@
 import argparse
 import logging
+import time
 import cv2
 
 logging.basicConfig(level=logging.INFO)
@@ -14,9 +15,9 @@ def record():  # generate frame by frame from camera
     frame_height = int(camera.get(4))
     fps = int(camera.get(5))
 
-    # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
+    timestr = time.strftime("%Y%m%d_%H%M%S")
     out = cv2.VideoWriter(
-        "outpy.avi",
+        f"out_{timestr}.avi",
         cv2.VideoWriter_fourcc("M", "J", "P", "G"),
         fps,
         (frame_width, frame_height),
