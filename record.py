@@ -15,7 +15,8 @@ def record():  # generate frame by frame from camera
     frame_height = int(camera.get(4))
     fps = int(camera.get(5))
 
-    timestr = time.strftime("%Y%m%d_%H%M%S")
+    # # timestr = time.strftime("%Y%m%d_%H%M%S")
+    timestr = "video"
     out = cv2.VideoWriter(
         f"out_{timestr}.avi",
         cv2.VideoWriter_fourcc("M", "J", "P", "G"),
